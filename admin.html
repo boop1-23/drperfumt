@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="إدارة المتجر">
+<meta name="robots" content="noindex">
+<title>إدارة المتجر</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0d0b;--card:#1a1714;--card2:#221e1a;--line:#2f2a24;--gold:#d4a95a;--gold2:#f0d398;--text:#f3ece2;--muted:#a39a8d;--green:#25d366;--red:#e5675b;--blue:#5b9be5}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+button{font-family:inherit;cursor:pointer;border:none}
+input,textarea,select{width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);padding:11px 12px;border-radius:10px;font-family:inherit;font-size:16px;outline:none}
+input:focus,textarea:focus{border-color:var(--gold)}
+label{font-size:13px;color:var(--muted);display:block;margin:10px 0 5px}
+.wrap{max-width:720px;margin:auto;padding:16px}
+.btn{background:var(--gold);color:#1a1208;font-weight:800;padding:11px 16px;border-radius:11px;font-size:15px}
+.btn.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line)}
+.btn.red{background:var(--red);color:#fff}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:9px}
+.login{max-width:360px;margin:15vh auto;padding:24px;background:var(--card);border:1px solid var(--line);border-radius:18px}
+.login h1{text-align:center;color:var(--gold2);margin-bottom:10px}
+.err{color:var(--red);font-size:13px;min-height:18px;margin-top:8px}
+header{position:sticky;top:0;background:rgba(15,13,11,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:10}
+.hbar{max-width:720px;margin:auto;display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
+.hbar h1{font-size:19px;color:var(--gold2)}
+nav{position:fixed;bottom:0;left:0;right:0;background:#141210;border-top:1px solid var(--line);display:flex;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;color:var(--muted);padding:12px 0 10px;font-size:13px;position:relative}
+nav button.on{color:var(--gold2);font-weight:700}
+nav .badge{position:absolute;top:6px;left:calc(50% - 22px);background:var(--red);color:#fff;font-size:11px;border-radius:9px;padding:0 6px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center}
+.between{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.muted{color:var(--muted);font-size:13px}
+.st{font-size:12px;padding:3px 10px;border-radius:999px;font-weight:700}
+.st.جديد{background:var(--red);color:#fff}.st.قيد{background:var(--blue);color:#fff}.st.مكتمل{background:var(--green);color:#04210f}.st.ملغي{background:#555;color:#ddd}
+.ol{margin:8px 0;font-size:14px;line-height:1.8}
+.filters{display:flex;gap:6px;overflow:auto;margin-bottom:12px}
+.filters button{background:var(--card);color:var(--muted);border:1px solid var(--line);padding:7px 13px;border-radius:999px;white-space:nowrap;font-size:13px}
+.filters button.on{background:var(--gold);color:#1a1208;font-weight:700}
+.pimg{width:58px;height:58px;border-radius:12px;object-fit:cover;background:var(--card2);flex-shrink:0;display:grid;place-items:center;font-size:24px}
+.sizerow{display:flex;gap:6px;margin-bottom:6px}
+.sizerow input{flex:1}
+.switch{display:flex;align-items:center;gap:8px;margin-top:12px}
+.switch input{width:22px;height:22px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:30;overflow:auto;display:none}
+.modal.on{display:block}
+.modal .sheet{background:#141210;max-width:620px;margin:20px auto;border-radius:18px;padding:16px;border:1px solid var(--line)}
+.hidden{display:none!important}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--gold);color:#1a1208;font-weight:700;padding:10px 18px;border-radius:12px;opacity:0;transition:.3s;z-index:60;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- تسجيل الدخول -->
+<div id="loginView" class="login hidden">
+  <h1>🔐 إدارة المتجر</h1>
+  <label>البريد الإلكتروني</label><input id="lEmail" type="email" autocomplete="username">
+  <label>كلمة المرور</label><input id="lPass" type="password" autocomplete="current-password">
+  <div class="err" id="lErr"></div>
+  <button class="btn" style="width:100%;margin-top:6px" id="loginBtn">دخول</button>
+</div>
+
+<!-- لوحة الإدارة -->
+<div id="appView" class="hidden">
+  <header><div class="hbar"><h1 id="title">الطلبات</h1><button class="btn ghost sm" id="logout">خروج</button></div></header>
+  <div class="wrap">
+    <section id="tab-orders">
+      <div class="filters" id="oFilters"></div>
+      <div id="orders"></div>
+    </section>
+    <section id="tab-perfumes" class="hidden">
+      <button class="btn" style="width:100%;margin-bottom:12px" id="newP">+ إضافة عطر جديد</button>
+      <div id="plist"></div>
+    </section>
+    <section id="tab-settings" class="hidden">
+      <div class="box">
+        <label>اسم المتجر</label><input id="sName">
+        <label>رقم واتساب المتجر (بالصيغة الدولية بدون + مثال 9647701234567)</label><input id="sWa" inputmode="numeric">
+        <label>العملة</label><input id="sCur">
+        <button class="btn" style="width:100%;margin-top:14px" id="saveS">حفظ الإعدادات</button>
+      </div>
+      <p class="muted" style="text-align:center">رابط صفحة الزبون: <span id="custLink"></span></p>
+    </section>
+  </div>
+  <nav>
+    <button data-tab="orders" class="on">📦 الطلبات<span class="badge hidden" id="badge">0</span></button>
+    <button data-tab="perfumes">🧴 العطور</button>
+    <button data-tab="settings">⚙️ الإعدادات</button>
+  </nav>
+</div>
+
+<!-- نافذة إضافة/تعديل عطر -->
+<div class="modal" id="pModal"><div class="sheet">
+  <div class="between"><h2 id="pmTitle">عطر جديد</h2><button class="btn ghost sm" id="pmClose">✕</button></div>
+  <label>الصورة</label>
+  <div class="row"><img id="pmImgPrev" class="pimg hidden"><input type="file" id="pmImg" accept="image/*" style="flex:1"><button class="btn ghost sm hidden" id="pmImgDel">حذف</button></div>
+  <label>اسم العطر *</label><input id="pmName">
+  <div class="row">
+    <div style="flex:1"><label>النوع</label><select id="pmCat"><option>رجالي</option><option>نسائي</option><option>للجنسين</option></select></div>
+    <div style="flex:1"><label>شارة (اختياري)</label><input id="pmTag" placeholder="الأكثر مبيعاً"></div>
+  </div>
+  <label>الوصف</label><textarea id="pmDesc" rows="2"></textarea>
+  <label>المقدمة (المكونات الأولى)</label><input id="pmTop" placeholder="زعفران، هيل">
+  <label>القلب</label><input id="pmHeart" placeholder="عود، ورد">
+  <label>القاعدة</label><input id="pmBase" placeholder="عنبر، مسك">
+  <label>الأحجام والأسعار *</label>
+  <div id="pmSizes"></div>
+  <button class="btn ghost sm" id="pmAddSize">+ حجم آخر</button>
+  <div class="row">
+    <div style="flex:1"><label>لون القنينة (إذا ماكو صورة)</label><input id="pmColor" type="color" value="#7a4a1e" style="height:44px;padding:4px"></div>
+    <div style="flex:1"><label>الترتيب</label><input id="pmOrder" type="number" value="0"></div>
+  </div>
+  <div class="switch"><input type="checkbox" id="pmAvail" checked><span>متوفر (يظهر للزبون)</span></div>
+  <div class="err" id="pmErr"></div>
+  <div class="row" style="margin-top:8px">
+    <button class="btn" style="flex:1" id="pmSave">حفظ</button>
+    <button class="btn red hidden" id="pmDelete">حذف العطر</button>
+  </div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { firebaseConfig } from "./config.js";
+
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let cur="د.ع"; const fmt=n=>Number(n||0).toLocaleString('en-US')+" "+cur;
+const toast=t=>{const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),1800)};
+let unsubs=[];
+
+/* ---------- الدخول ---------- */
+onAuthStateChanged(auth,u=>{
+  unsubs.forEach(f=>f()); unsubs=[];
+  $('#loginView').classList.toggle('hidden',!!u); $('#appView').classList.toggle('hidden',!u);
+  if(u) start();
+});
+$('#loginBtn').onclick=async()=>{
+  $('#lErr').textContent='';
+  try{ await signInWithEmailAndPassword(auth,$('#lEmail').value.trim(),$('#lPass').value); }
+  catch(e){ $('#lErr').textContent='البريد أو كلمة المرور غير صحيحة'; }
+};
+$('#lPass').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
+$('#logout').onclick=()=>signOut(auth);
+
+/* ---------- التبويبات ---------- */
+const titles={orders:'الطلبات',perfumes:'العطور',settings:'الإعدادات'};
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
+  for(const t in titles) $('#tab-'+t).classList.toggle('hidden',t!==b.dataset.tab);
+  $('#title').textContent=titles[b.dataset.tab]; scrollTo(0,0);
+});
+
+function start(){
+  $('#custLink').textContent=location.href.replace(/admin\.html.*$/,'');
+  getDoc(doc(db,"settings","store")).then(d=>{const s=d.exists()?d.data():{};
+    $('#sName').value=s.name||'متجر العطور'; $('#sWa').value=s.whatsapp||''; $('#sCur').value=s.currency||'د.ع'; cur=s.currency||'د.ع'; renderOrders(); renderP();});
+  unsubs.push(onSnapshot(query(collection(db,"orders"),orderBy("createdAt","desc"),limit(300)),snap=>{
+    if(firstLoad===false) snap.docChanges().forEach(c=>{ if(c.type==='added') alertNew(); });
+    firstLoad=false; orders=snap.docs.map(d=>({id:d.id,...d.data()})); renderOrders();
+  },e=>toast('خطأ بتحميل الطلبات: تأكد من القواعد (Rules)')));
+  unsubs.push(onSnapshot(collection(db,"perfumes"),snap=>{ perfumes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0)); renderP(); }));
+}
+
+/* ---------- الطلبات ---------- */
+let orders=[], perfumes=[], firstLoad=true, oFilter="الكل";
+const STATUSES=["جديد","قيد التوصيل","مكتمل","ملغي"];
+function alertNew(){
+  toast('🔔 وصل طلب جديد!'); try{navigator.vibrate&&navigator.vibrate(300)}catch(e){}
+  try{const a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator();o.frequency.value=880;o.connect(a.destination);o.start();o.stop(a.currentTime+.25)}catch(e){}
+}
+function renderOrders(){
+  const newCount=orders.filter(o=>o.status==="جديد").length;
+  $('#badge').textContent=newCount; $('#badge').classList.toggle('hidden',!newCount);
+  document.title=(newCount?`(${newCount}) `:'')+'إدارة المتجر';
+  $('#oFilters').innerHTML=["الكل",...STATUSES].map(s=>`<button class="${s===oFilter?'on':''}" data-of="${s}">${s} (${s==="الكل"?orders.length:orders.filter(o=>o.status===s).length})</button>`).join('');
+  const list=orders.filter(o=>oFilter==="الكل"||o.status===oFilter);
+  if(!list.length){$('#orders').innerHTML='<p class="muted" style="text-align:center;padding:40px">لا توجد طلبات</p>';return}
+  $('#orders').innerHTML=list.map(o=>{
+    const dt=o.createdAt?.toDate?o.createdAt.toDate().toLocaleString('ar-IQ',{dateStyle:'short',timeStyle:'short'}):'';
+    const ph=String(o.phone||'').replace(/\D/g,'').replace(/^0/,'964');
+    return `<div class="box">
+      <div class="between"><b>#${esc(o.num)} — ${esc(o.name)}</b><span class="st ${esc((o.status||'').split(' ')[0])}">${esc(o.status)}</span></div>
+      <div class="muted">${dt}</div>
+      <div class="ol">${(o.items||[]).map(i=>`• ${esc(i.name)} (${esc(i.size)}) × ${esc(i.qty)} = ${fmt(i.price*i.qty)}`).join('<br>')}</div>
+      <div class="between"><b style="color:var(--gold2)">المجموع: ${fmt(o.total)}</b></div>
+      <div class="muted" style="margin:6px 0">📞 ${esc(o.phone)}<br>📍 ${esc(o.address)}${o.note?`<br>📝 ${esc(o.note)}`:''}</div>
+      <div class="row" style="flex-wrap:wrap">
+        <select data-status="${o.id}" style="flex:1;min-width:130px;padding:8px">${STATUSES.map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select>
+        <a class="btn sm" style="background:var(--green);color:#04210f;text-decoration:none" href="https://wa.me/${ph}" target="_blank">واتساب</a>
+        <a class="btn ghost sm" style="text-decoration:none" href="tel:${esc(o.phone)}">اتصال</a>
+        <button class="btn red sm" data-odel="${o.id}">حذف</button>
+      </div></div>`}).join('');
+}
+document.addEventListener('change',async e=>{
+  const id=e.target.dataset.status; if(!id) return;
+  try{await updateDoc(doc(db,"orders",id),{status:e.target.value});toast('تم تحديث الحالة')}catch(err){toast('فشل التحديث')}
+});
+
+/* ---------- العطور ---------- */
+function renderP(){
+  if(!perfumes.length){$('#plist').innerHTML='<p class="muted" style="text-align:center;padding:30px">ماكو عطور بعد. اضغط "إضافة عطر جديد"</p>';return}
+  $('#plist').innerHTML=perfumes.map(p=>`<div class="box row" data-edit="${p.id}" style="cursor:pointer">
+    ${p.image?`<img class="pimg" src="${esc(p.image)}">`:`<div class="pimg" style="background:${esc(p.color||'#7a4a1e')}">🧴</div>`}
+    <div style="flex:1"><b>${esc(p.name)}</b> ${p.available===false?'<span class="st ملغي">مخفي</span>':''}<div class="muted">${esc(p.cat)} • ${(p.sizes||[]).map(s=>esc(s.label)+': '+fmt(s.price)).join(' | ')}</div></div>
+    <span class="muted">✏️</span></div>`).join('');
+}
+let editId=null, imgData=null;
+function sizeRow(l='',p=''){const d=document.createElement('div');d.className='sizerow';
+  d.innerHTML=`<input placeholder="الحجم (50 مل)" value="${esc(l)}"><input placeholder="السعر" inputmode="numeric" value="${esc(p)}"><button class="btn ghost sm">✕</button>`;
+  d.querySelector('button').onclick=()=>d.remove(); $('#pmSizes').appendChild(d);}
+function openP(p){
+  editId=p?.id||null; imgData=p?.image||null;
+  $('#pmTitle').textContent=p?'تعديل عطر':'عطر جديد';
+  $('#pmName').value=p?.name||''; $('#pmCat').value=p?.cat||'رجالي'; $('#pmTag').value=p?.tag||'';
+  $('#pmDesc').value=p?.desc||''; $('#pmTop').value=p?.top||''; $('#pmHeart').value=p?.heart||''; $('#pmBase').value=p?.base||'';
+  $('#pmColor').value=p?.color||'#7a4a1e'; $('#pmOrder').value=p?.order||0; $('#pmAvail').checked=p?.available!==false;
+  $('#pmSizes').innerHTML=''; (p?.sizes?.length?p.sizes:[{label:'30 مل',price:''},{label:'50 مل',price:''},{label:'100 مل',price:''}]).forEach(s=>sizeRow(s.label,s.price));
+  $('#pmImg').value=''; showImg(); $('#pmErr').textContent=''; $('#pmDelete').classList.toggle('hidden',!p);
+  $('#pModal').classList.add('on'); $('#pModal').scrollTop=0;
+}
+function showImg(){ $('#pmImgPrev').classList.toggle('hidden',!imgData); $('#pmImgDel').classList.toggle('hidden',!imgData); if(imgData)$('#pmImgPrev').src=imgData; }
+$('#newP').onclick=()=>openP(null);
+$('#pmClose').onclick=()=>$('#pModal').classList.remove('on');
+$('#pmAddSize').onclick=()=>sizeRow();
+$('#pmImgDel').onclick=()=>{imgData=null;showImg()};
+$('#pmImg').onchange=e=>{ // تصغير الصورة لتخزينها مباشرة
+  const f=e.target.files[0]; if(!f) return; const img=new Image();
+  img.onload=()=>{const m=600,r=Math.min(1,m/Math.max(img.width,img.height)),c=document.createElement('canvas');
+    c.width=img.width*r;c.height=img.height*r;c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    imgData=c.toDataURL('image/jpeg',.75);URL.revokeObjectURL(img.src);showImg();};
+  img.src=URL.createObjectURL(f);
+};
+$('#pmSave').onclick=async()=>{
+  const sizes=[...$('#pmSizes').children].map(r=>{const [a,b]=r.querySelectorAll('input');return{label:a.value.trim(),price:Number(String(b.value).replace(/[^\d.]/g,''))}}).filter(s=>s.label&&s.price>0);
+  const name=$('#pmName').value.trim();
+  if(!name) return $('#pmErr').textContent='اكتب اسم العطر';
+  if(!sizes.length) return $('#pmErr').textContent='أضف حجماً واحداً على الأقل مع سعره';
+  const data={name,cat:$('#pmCat').value,tag:$('#pmTag').value.trim(),desc:$('#pmDesc').value.trim(),top:$('#pmTop').value.trim(),
+    heart:$('#pmHeart').value.trim(),base:$('#pmBase').value.trim(),color:$('#pmColor').value,order:Number($('#pmOrder').value)||0,
+    available:$('#pmAvail').checked,sizes,image:imgData||null};
+  const b=$('#pmSave'); b.disabled=true; b.textContent='جارٍ الحفظ…';
+  try{ editId?await setDoc(doc(db,"perfumes",editId),data):await addDoc(collection(db,"perfumes"),data);
+    $('#pModal').classList.remove('on'); toast('تم الحفظ ✓'); }
+  catch(e){ $('#pmErr').textContent='فشل الحفظ: '+(e.code||''); }
+  b.disabled=false; b.textContent='حفظ';
+};
+
+/* أزرار الحذف بتأكيد داخل الصفحة */
+let pendingDel=null;
+document.addEventListener('click',async e=>{
+  const of=e.target.closest('[data-of]'); if(of){oFilter=of.dataset.of;renderOrders();return}
+  const ed=e.target.closest('[data-edit]'); if(ed){openP(perfumes.find(p=>p.id===ed.dataset.edit));return}
+  const od=e.target.closest('[data-odel]');
+  if(od){ if(pendingDel!==od){pendingDel=od;od.textContent='تأكيد؟';setTimeout(()=>{if(pendingDel===od){od.textContent='حذف';pendingDel=null}},3000);return}
+    await deleteDoc(doc(db,"orders",od.dataset.odel)); pendingDel=null; toast('تم حذف الطلب'); }
+});
+$('#pmDelete').onclick=async()=>{const b=$('#pmDelete');
+  if(b.textContent!=='اضغط مرة ثانية للتأكيد'){b.textContent='اضغط مرة ثانية للتأكيد';setTimeout(()=>b.textContent='حذف العطر',3000);return}
+  await deleteDoc(doc(db,"perfumes",editId)); $('#pModal').classList.remove('on'); toast('تم حذف العطر');};
+
+/* ---------- الإعدادات ---------- */
+$('#saveS').onclick=async()=>{
+  const wa=$('#sWa').value.replace(/\D/g,'');
+  try{await setDoc(doc(db,"settings","store"),{name:$('#sName').value.trim()||'متجر العطور',whatsapp:wa,currency:$('#sCur').value.trim()||'د.ع'});
+    cur=$('#sCur').value.trim()||'د.ع'; $('#sWa').value=wa; toast('تم حفظ الإعدادات ✓'); renderOrders(); renderP();}
+  catch(e){toast('فشل الحفظ')}
+};
+</script>
+</body>
+</html>
